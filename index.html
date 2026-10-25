@@ -602,7 +602,7 @@ function feter(acts){
    (rien n'est envoyé ailleurs). Période : les 4 dernières semaines, ou depuis septembre. */
 const PERIODES = [['mois', 'Ces 4 dernières semaines'], ['annee', 'Depuis septembre']];
 /* Bilan en FALC : une idée par ligne, phrases courtes, 6 lignes au maximum */
-const NOMS_BILAN = { oral:'parler', ecrit:'écrire', compr:'lire', audit:'écouter' };
+/* Compétences : nom complet + nombre d'activités, jamais « tu sais parler » (trop réducteur) */
 const et = l => l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' et ' + l[l.length-1];
 const fois = n => n + ' fois';
 function bilan(tousActs, toutesPres){
@@ -610,15 +610,17 @@ function bilan(tousActs, toutesPres){
   const garde = d => periode==='annee' || d >= debut;
   const acts = tousActs.filter(a => garde(a.date)), pres = toutesPres.filter(x => garde(x.date));
   if(!acts.length && !pres.length) return '<p class="b-vide">Rien de nouveau sur cette période. Choisis « Depuis septembre » pour tout voir.</p>';
-  const d = acts.map(dernier), lignes = [], gras = l => et(l.map(k => `<b>${NOMS_BILAN[k]}</b>`));
+  const d = acts.map(dernier), lignes = [];
+  const comp = (l, v) => et(l.map(k => { const n = d.filter(x => x[k]===v).length;
+    return `<b>${NOMS[k]}</b> (${n} activité${n>1?'s':''})`; }));
 
   if(acts.length){
     const finies = d.filter(x => x.etat==='t').length, act = n => `${n} activité${n>1?'s':''}`;
     lignes.push(['mint', finies ? `Tu as fini <b>${act(finies)}</b>.` : `Tu travailles sur <b>${act(acts.length)}</b>.`]);
     const acquises = COMPS.filter(k => d.some(x => x[k]==='a'));
     const enCours = COMPS.filter(k => !acquises.includes(k) && d.some(x => x[k]==='ec'));
-    if(acquises.length) lignes.push(['blue', `Tu sais ${gras(acquises)}.`]);
-    if(enCours.length) lignes.push(['yellow', `Tu t’entraînes à ${gras(enCours)}.`]);
+    if(acquises.length) lignes.push(['blue', `Objectif atteint : ${comp(acquises, 'a')}.`]);
+    if(enCours.length) lignes.push(['yellow', `Tu t’entraînes encore : ${comp(enCours, 'ec')}.`]);
     const refus = d.filter(x => x.engag==='n').length, bien = d.filter(x => x.engag==='ep').length;
     if(refus) lignes.push(['yellow', `Tu n’as pas travaillé dans ${act(refus)}. On en parle ?`]);
     else if(bien) lignes.push(['mint', 'Bravo, tu travailles bien !']);
