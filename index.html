@@ -336,9 +336,10 @@ function chercher(c){
     // le code démo EMMA-4821 est relié à Emma de la classe fictive P2SSFB
     if(e.code!==c && !(el && e.prenom===el.prenom && cl.nom===el.classe)) continue;
     el ||= { prenom:e.prenom, classe:cl.nom, presences:[], activites:activitesProf(S, cl.id, e.id) };
+    // une présence par heure de cours : la clé « classe#3 » = 3e heure quand la classe a plusieurs heures ce jour-là
     const parJour = new Map(el.presences.map(x => [x.date, x]));
-    for(const [date, cls] of Object.entries(S.presences || {})) for(const pr of Object.values(cls))
-      if(pr[e.id]?.s || pr[e.id]?.i) parJour.set(date, { date, s:pr[e.id].s || 'p', ...(pr[e.id].i && { i:true }) });   // la remarque de retard reste privée (jamais envoyée) ; i = iPad oublié
+    for(const [date, cls] of Object.entries(S.presences || {})) for(const [k, pr] of Object.entries(cls))
+      if(pr[e.id]?.s || pr[e.id]?.i) parJour.set(date + (k.includes('#') ? '#'+k.split('#')[1] : ''), { date, s:pr[e.id].s || 'p', ...(pr[e.id].i && { i:true }) });   // la remarque de retard reste privée (jamais envoyée) ; i = iPad oublié
     el.presences = [...parJour.values()].sort((a, b) => a.date.localeCompare(b.date));
     return el;
   }
@@ -353,8 +354,9 @@ function activitesProf(S, cl, eid){
     const x = n[eid], envois = x.hist?.length ? x.hist : [{ quand:date+'T12:00', ...x }];
     // séances où Ludo a noté « pas travaillé » (x.sans) : montré seulement s'il était là, jamais pour une absence
     const auj = new Date().toISOString().slice(0,10);
-    const jours = [...new Set(S.journal.filter(e => e.classe===cl && e.date<=auj && cl+'|'+cleNom(e.activite)===k).map(e => e.date))];
-    const la = jours.filter(d => !['a','s'].includes(S.presences?.[d]?.[cl]?.[eid]?.s));
+    // séance = « date » ou « date#heure » (2e heure de la même classe le même jour), comme dans prof.html
+    const jours = [...new Set(S.journal.filter(e => e.classe===cl && e.date<=auj && cl+'|'+cleNom(e.activite)===k).map(e => e.seance || e.date))];
+    const la = jours.filter(d => !['a','s'].includes(S.presences?.[d.slice(0,10)]?.[d.includes('#') ? cl+'#'+d.split('#')[1] : cl]?.[eid]?.s));
     const sans = la.filter(d => (x.sans || []).includes(d)).length;
     const seances = jours.length > 1 && sans ? { total:la.length, ok:la.length - sans } : null;
     return { nom:j ? j.activite.trim() : k.split('|')[1], date, envois, seances };
@@ -481,7 +483,7 @@ function afficher(){
       <p class="aide" style="margin-top:12px">Les jours de stage ne comptent pas comme des absences.</p>
       <details class="pres-detail"><summary>Voir le détail jour par jour</summary>
         ${mois(pres).map(([m, jours]) => `<div class="mois"><span>${m}</span><div>${jours.map(x =>
-          `<i class="jr c-${PRES[x.s][1]}" title="${jour(x.date)} : ${PRES[x.s][0]}">${+x.date.slice(8)}</i>`).join('')}</div></div>`).join('')}
+          `<i class="jr c-${PRES[x.s][1]}" title="${jour(x.date)}${x.h ? `, heure ${x.h}` : ''} : ${PRES[x.s][0]}">${+x.date.slice(8)}</i>`).join('')}</div></div>`).join('')}
       </details></section>` : ''}
 
     ${acts.length ? `<section><h2>Mes activités</h2>
