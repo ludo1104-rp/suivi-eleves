@@ -630,7 +630,9 @@ function bilan(tousActs, toutesPres){
   }
   if(pres.length){
     const cours = pres.filter(x => x.s!=='s').length, ici = pres.filter(x => x.s==='p' || x.s==='t').length;
-    if(cours) lignes.push(['rose', `Tu étais là à <b>${ici} cours sur ${cours}</b>.`]);
+    // la période est écrite dans la phrase : « 6 sur 7 » seul faisait croire à une erreur (27/10)
+    const quand = periode==='annee' ? 'Depuis septembre' : 'Ces 4 dernières semaines';
+    if(cours) lignes.push(['rose', `${quand}, tu étais là à <b>${ici} cours sur ${cours}</b>.`]);
     const o = pres.filter(x => x.i).length;
     if(o) lignes.push(['peach', `Tu as oublié ton iPad <b>${fois(o)}</b>.`]);
   }
