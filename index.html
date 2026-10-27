@@ -278,6 +278,9 @@ html.r-snap .top{scroll-snap-align:start}
 @media (max-width:760px){ .r-etape h2{font-size:32px} .r-etape .bonjour h1{font-size:40px} .r-etape p{font-size:20px} }
 @media (prefers-reduced-motion:reduce){ .r-anim{opacity:1;transform:none;transition:none} .r-vu .r-glisse{animation:none} .r-pts i{transition:none} }
 @media print{ .r-recit{display:none!important} #tout[hidden]{display:block!important} html.r-snap{scroll-snap-type:none} }
+/* Point qui rebondit (comme rprof1.com) : le point et les lettres touchées bougent en JS */
+.pt-saute{position:relative;display:inline-block;transform-origin:50% 85%}
+.pt-l{display:inline-block;transform-origin:50% 100%}
 </style>
 </head>
 <body>
@@ -364,6 +367,7 @@ const dernier = a => a.envois[a.envois.length-1];
 const store = (k, v) => { try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){} };
 
 let eleve = null, code = null, periode = 'mois', apercu = false;
+let apresBravo = null;    // animation à lancer quand la fenêtre « Bravo » se ferme
 let toutOuvert = false;   // « Voir davantage » touché : le tableau reste ouvert (même après Actualiser)
 
 const PRES = { p:['Présent·e','mint'], t:['Arrivée tardive','yellow'], a:['Absent·e','rose'], s:['En stage','blue'] };
@@ -449,6 +453,72 @@ $('vueCode').addEventListener('submit', async e => {
 /* En ligne (élèves) : pas de ligne de démo ni de « maquette ». Sur le Mac (fichier local), elles restent.
    Le code EMMA-4821 marche partout. */
 if(location.protocol !== 'file:') document.querySelectorAll('.seulement-mac').forEach(e => e.remove());
+/* Le point qui rebondit, comme sur rprof1.com (repris de site-rprof1/assets/main.js, en plus court).
+   Le point tombe sur une lettre, saute de lettre en lettre (chacune s'enfonce et prend sa couleur), puis se pose noir.
+   combien = 4 : 4 lettres réparties dans le titre ; 1 : seulement la dernière. Rien avec « Réduire les animations ». */
+const COULEURS_POINT = ['#B9A7EE', '#8FB6EE', '#86CFA4', '#E9C95E', '#F4A3B4'];
+function trajet(x0, y0){
+  const k = [{ x:x0, y:y0, sx:1, sy:1, t:0 }], impacts = []; let t = 0;
+  const aj = (x, y, sx, sy, dt) => { t += dt; k.push({ x, y, sx, sy, t }); };
+  const pose = () => { const a = k[k.length-1]; impacts.push(t); aj(a.x, a.y, 1.35, .68, 70); aj(a.x, a.y, .92, 1.08, 70); aj(a.x, a.y, 1, 1, 50); };
+  return { impacts, duree: () => t,
+    chute(y, d){ const a = k[k.length-1]; for(let i = 1; i <= 10; i++) aj(a.x, a.y + (y-a.y)*(i/10)*(i/10), .9, 1.15, d/10); pose(); },
+    saut(x, y, h, d){ const a = k[k.length-1];
+      for(let i = 1; i <= 12; i++){ const s = i/12, e = i===12 ? 1 : 1 + .12*Math.abs(1-2*s);
+        aj(a.x + (x-a.x)*s, a.y + (y-a.y)*s - 4*(h + Math.abs(y-a.y)/2)*s*(1-s), 1/e, e, d/12); }
+      pose(); },
+    jouer: (el, delai) => el.animate(k.map(p => ({ transform:`translate(${p.x}px,${p.y}px) scale(${p.sx},${p.sy})`, offset:p.t/t })),
+      { duration:t, delay:delai, fill:'backwards' }) };
+}
+function ressort(el, delai, couleur){
+  const images = [];
+  for(let i = 0; i <= 24; i++){ const s = i/24, y = i ? .075*Math.exp(-5*s)*Math.sin(Math.PI*(.5 + 3*s)) : 0;
+    images.push({ transform:`translateY(${y.toFixed(4)}em) scaleY(${(1 - y*.6).toFixed(4)})`, offset:s }); }
+  el.animate(images, { duration:650, delay:delai });
+  el.animate([{ color:couleur }, { color:couleur, offset:.35 }, { color:getComputedStyle(el).color }], { duration:900, delay:delai, easing:'ease-in' });
+}
+function rebondir(point, combien){
+  try{
+    if(!point || !point.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const texte = point.previousSibling; if(!texte || texte.nodeType !== 3) return;
+    const car = [...texte.data], idx = car.map((c, i) => c.trim() ? i : -1).filter(i => i >= 0);
+    if(!idx.length) return;
+    const choix = combien===1 ? [idx[idx.length-1]] : idx.length <= combien ? idx
+      : Array.from({ length:combien }, (_, n) => idx[Math.round(n*(idx.length-1)/(combien-1))]);
+    /* Les lettres touchées deviennent des <span> (pour les faire bouger) ; le reste reste du texte */
+    const frag = document.createDocumentFragment(), lettres = []; let reste = '';
+    car.forEach((c, i) => {
+      if(!choix.includes(i)){ reste += c; return; }
+      if(reste) frag.append(reste); reste = '';
+      const s = document.createElement('span'); s.className = 'pt-l'; s.textContent = c; frag.append(s); lettres.push(s);
+    });
+    if(reste) frag.append(reste);
+    texte.replaceWith(frag);
+    point.classList.add('pt-saute');
+    /* Sommet de chaque lettre, par rapport au point posé */
+    const fs = parseFloat(getComputedStyle(point.parentNode).fontSize), pinceau = document.createElement('canvas').getContext('2d');
+    pinceau.font = `600 ${fs}px Figtree`;
+    const rp = point.getBoundingClientRect(), cx = rp.left + rp.width/2;
+    const pos = lettres.map(el => { const r = el.getBoundingClientRect();
+      return { x: r.left + r.width/2 - cx, y: -pinceau.measureText(el.textContent).actualBoundingBoxAscent }; });
+    const tr = trajet(pos[0].x, pos[0].y - fs*1.4);
+    tr.chute(pos[0].y, 450);
+    for(let i = 1; i < pos.length; i++) tr.saut(pos[i].x, pos[i].y, fs*.3, 340);
+    tr.saut(0, 0, fs*.28, 340);
+    tr.saut(0, 0, fs*.1, 220);
+    const debut = 300, total = tr.duree(), fin = getComputedStyle(point).color, L = lettres.length;
+    const teintes = [{ color:COULEURS_POINT[0], offset:0 }];
+    lettres.forEach((el, n) => { const c = COULEURS_POINT[(n+1) % 5];
+      teintes.push({ color:c, offset:tr.impacts[n]/total }); ressort(el, debut + tr.impacts[n], c); });
+    teintes.push({ color:COULEURS_POINT[4], offset:(tr.impacts[L] - 120)/total }, { color:fin, offset:tr.impacts[L]/total }, { color:fin, offset:1 });
+    tr.jouer(point, debut);
+    point.animate([{ opacity:0 }, { opacity:1 }], { duration:1, delay:debut, fill:'backwards' });
+    point.animate(teintes, { duration:total, delay:debut, fill:'backwards' });
+  }catch(e){}   // une animation ne doit jamais empêcher d'afficher le suivi
+}
+/* Écran du code : « Mon suivi. » */
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => rebondir(document.querySelector('.connexion h1 b'), 4));
+else rebondir(document.querySelector('.connexion h1 b'), 4);
 /* Raccourci du QR code : eleve.html#c=ABC-DEFG remplit le code */
 try{
   const h = new URLSearchParams(location.hash.slice(1)), hc = (h.get('c') || '').toUpperCase();
@@ -600,6 +670,8 @@ function brancherRecit(){
     if(!s.classList.contains('r-vu')){
       s.classList.add('r-vu');
       s.querySelectorAll('[data-r]').forEach((i, n) => setTimeout(() => i.classList.add(i.dataset.r), 500 + n*140));
+      if(s === ecrans[0]){ const bonjour = () => rebondir(s.querySelector('.bonjour h1 > b'), 1);
+        if($('bravo')) apresBravo = bonjour; else bonjour(); }
     }
     ici = ecrans.indexOf(s);
     barres.forEach((b, i) => b.classList.toggle('fait', i <= ici));
@@ -710,7 +782,7 @@ function feter(acts){
     </div></div>`);
   const fermer = () => {
     if(!apercu) store('suivi-fete-'+code, JSON.stringify([...new Set([...deja, ...finies.map(cleAct)])]));
-    const b = $('bravo'); b.classList.add('sort'); setTimeout(() => b.remove(), 250);
+    const b = $('bravo'); b.classList.add('sort'); setTimeout(() => { b.remove(); if(apresBravo){ const f = apresBravo; apresBravo = null; f(); } }, 250);
   };
   $('bravoOk').onclick = fermer; $('bravoOk').focus();
   addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ removeEventListener('keydown', esc); if($('bravo')) fermer(); } });
