@@ -233,6 +233,51 @@ button:not(:disabled):active{opacity:.75}
 .vig .detail{border-radius:0 0 13px 13px}
 .aide{display:none}
 @media (prefers-reduced-motion:reduce){ .bravo-carte{animation:none} }
+
+/* ===== Récit qui défile (piste D, 27/10) : une idée par écran, barres en haut + bouton « Suivant ».
+   Le tableau complet (#tout) s'ouvre avec « Voir davantage ». Classes en r- (aucune collision). ===== */
+html{scroll-padding-top:29px}
+html.r-snap{scroll-snap-type:y mandatory}
+html.r-snap .top{scroll-snap-align:start}
+.r-barres{position:sticky;top:0;z-index:5;display:flex;gap:6px;padding:12px 0;background:var(--bg)}
+.r-barres i{flex:1;height:5px;border-radius:9px;background:var(--line-strong);overflow:hidden}
+.r-barres i b{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
+.r-barres i.fait b{width:100%}
+.r-etape{min-height:calc(100vh - 29px);min-height:calc(100svh - 29px);scroll-snap-align:start;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;gap:22px;padding:24px 8px 110px}
+.r-etape h2{font-size:40px;line-height:1.1}
+.r-etape h2 b{font-size:1.15em;line-height:0}
+.r-etape p{font-size:22px;margin:0;max-width:26ch}
+.r-etape p small{font-size:15px;color:var(--muted)}
+.r-etape .bonjour{justify-content:center}
+.r-etape .bonjour h1{font-size:52px}
+.r-etape .maj{margin:0;font-size:16px}
+.r-etape .parole{text-align:left;margin:0}
+.r-num{font-size:14px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.r-grand{font-size:clamp(44px,11vw,76px);font-weight:700;letter-spacing:-.05em;line-height:1}
+.r-glisse{color:var(--muted);font-size:16px}
+.r-vu .r-glisse{animation:r-hop 1.6s ease-in-out infinite}
+@keyframes r-hop{50%{transform:translateY(6px)}}
+.r-pts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:560px}
+.r-pts i{width:34px;height:34px;border-radius:50%;background:var(--p-gris);transition:background-color .4s}
+.r-pts.petits i{width:22px;height:22px}
+.r-pts i.on{background:var(--b-mint)} .r-pts i.ab{background:var(--b-rose)}
+.r-cartes{display:grid;gap:12px;width:min(420px,100%)}
+.r-cartes div{border-radius:14px;padding:16px 18px;text-align:left;font-size:21px;font-weight:600}
+.r-cartes small{display:block;font-size:14px;font-weight:400;color:#555}
+.r-anim{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.r-vu .r-anim{opacity:1;transform:none}
+.r-vu .r-anim:nth-child(2){transition-delay:.15s} .r-vu .r-anim:nth-child(3){transition-delay:.3s} .r-vu .r-anim:nth-child(4){transition-delay:.45s}
+.r-bouton{min-height:56px;padding:12px 28px;border-radius:12px;font-size:20px;font-weight:600}
+.r-bouton.clair{background:var(--bg);border:1px solid var(--line-strong)}
+.r-suivant{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;min-width:220px;
+  background:var(--ink);color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.15);transition:opacity .3s}
+.r-suivant.cache{opacity:0;pointer-events:none}
+.r-tout{font-size:34px;margin:8px 0 0}
+.r-tout b{font-size:1.15em;line-height:0}
+@media (max-width:760px){ .r-etape h2{font-size:32px} .r-etape .bonjour h1{font-size:40px} .r-etape p{font-size:20px} }
+@media (prefers-reduced-motion:reduce){ .r-anim{opacity:1;transform:none;transition:none} .r-vu .r-glisse{animation:none} .r-pts i{transition:none} }
+@media print{ .r-recit{display:none!important} #tout[hidden]{display:block!important} html.r-snap{scroll-snap-type:none} }
 </style>
 </head>
 <body>
@@ -319,6 +364,7 @@ const dernier = a => a.envois[a.envois.length-1];
 const store = (k, v) => { try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){} };
 
 let eleve = null, code = null, periode = 'mois', apercu = false;
+let toutOuvert = false;   // « Voir davantage » touché : le tableau reste ouvert (même après Actualiser)
 
 const PRES = { p:['Présent·e','mint'], t:['Arrivée tardive','yellow'], a:['Absent·e','rose'], s:['En stage','blue'] };
 
@@ -408,7 +454,7 @@ try{
     $('code').value = hc; setTimeout(() => $('vueCode').requestSubmit());
   }
 }catch(e){}
-$('quitter').onclick = () => { eleve = null; $('code').value = ''; $('vueSuivi').hidden = true; $('vueCode').hidden = false;
+$('quitter').onclick = () => { eleve = null; $('code').value = ''; toutOuvert = false; document.documentElement.classList.remove('r-snap'); $('vueSuivi').hidden = true; $('vueCode').hidden = false;
   ['quitter','imprimer','actualiser'].forEach(id => $(id).hidden = true); };
 $('imprimer').onclick = () => window.print();
 /* « Voir comme l'élève » depuis prof.html : le code passe par cet appareil, puis est effacé */
@@ -451,9 +497,11 @@ function afficher(){
       <span class="nb">${tot ? `${a} acquise${a>1?'s':''}` : 'pas encore'}</span></div>`;
   }).join('');
 
-  $('vueSuivi').innerHTML = `
-    <div class="bonjour"><h1 class="${f ? 'f-'+f : ''}">${f ? `<span class="deco">${FETES[f].svg}</span>` : ''}Bonjour${eleve.prenom ? ' '+echap(eleve.prenom) : ''}<b style="font-size:1.15em;line-height:0">.</b></h1><span class="cl">${echap(eleve.classe)}</span></div>
-    <p class="maj">${dateMaj ? `Mis à jour ${jour(dateMaj)}${dateMaj.length>10 ? ' à '+heure(dateMaj) : ''}` : 'Pas encore de suivi'}${dateMaj > vu && vu ? '<span class="nouveau">Nouveau</span>' : ''}</p>
+  const bonjour = `<div class="bonjour"><h1 class="${f ? 'f-'+f : ''}">${f ? `<span class="deco">${FETES[f].svg}</span>` : ''}Bonjour${eleve.prenom ? ' '+echap(eleve.prenom) : ''}<b style="font-size:1.15em;line-height:0">.</b></h1><span class="cl">${echap(eleve.classe)}</span></div>
+    <p class="maj">${dateMaj ? `Mis à jour ${jour(dateMaj)}${dateMaj.length>10 ? ' à '+heure(dateMaj) : ''}` : 'Pas encore de suivi'}${dateMaj > vu && vu ? '<span class="nouveau">Nouveau</span>' : ''}</p>`;
+  const etapes = recit({ acts, derniers, msg, pres, nbCours, nbPresent, enCours, finies, bonjour });
+  $('vueSuivi').innerHTML = etapes + `<div id="tout"${etapes && !toutOuvert ? ' hidden' : ''}>
+    ${etapes ? '<h2 class="r-tout">Tout mon suivi<b>.</b></h2>' : bonjour}
 
     <div class="tuiles">
       <div class="tuile t1">${anneau(nbTermines, acts.length, 'var(--b-mint)')}<div><div class="chiffre">${nbTermines}/${acts.length}</div><div class="lib">activités terminées</div></div></div>
@@ -489,15 +537,80 @@ function afficher(){
     ${acts.length ? `<section><h2>Mes activités</h2>
       <p class="aide">Touche une activité pour voir le détail.</p>
       ${enCours.length ? `<h3 class="groupe">En cours <small>${enCours.length}</small></h3><div class="vigs">${enCours.map(a => carte(a, vu)).join('')}</div>` : ''}
-      ${finies.length ? `<h3 class="groupe">Terminées <small>${finies.length}</small></h3><div class="vigs">${finies.map(a => carte(a, vu)).join('')}</div>` : ''}</section>` : ''}`;
+      ${finies.length ? `<h3 class="groupe">Terminées <small>${finies.length}</small></h3><div class="vigs">${finies.map(a => carte(a, vu)).join('')}</div>` : ''}</section>` : ''}</div>`;
   if(apercu) $('vueSuivi').insertAdjacentHTML('afterbegin', '<p class="apercu">Aperçu prof : c’est ce que voit l’élève. Rien n’est marqué comme lu.</p>');
   else store('suivi-vu-'+code, dateMaj);
   feter(acts);
+  brancherRecit();
   document.querySelectorAll('[data-periode]').forEach(b => b.onclick = () => {
     periode = b.dataset.periode;
     document.querySelectorAll('[data-periode]').forEach(x => x.setAttribute('aria-pressed', x===b));
     $('bilan').innerHTML = bilan(eleve.activites, eleve.presences);
   });
+}
+
+/* Récit qui défile (piste D, 27/10) : une idée par écran, dans l'ordre message → activités → compétences → présences.
+   Mêmes données que le tableau, qui reste derrière « Voir davantage ». Sans aucune donnée : pas de récit (''). */
+const nb = (n, mot) => `${n} ${mot}${n>1 ? 's' : ''}`;
+function recit({ acts, derniers, msg, pres, nbCours, nbPresent, enCours, finies, bonjour }){
+  const etapes = [];
+  if(msg) etapes.push(['Le message de Ludo', `<div class="r-anim" style="width:min(560px,100%)">${bulle(msg.remarque, `${echap(msg.act)} · ${jour(msg.quand)}`, true)}</div>`]);
+  if(acts.length){
+    const n = finies.length, reste = enCours.slice(0, 3).map(a => `<b>${echap(a.nom)}</b>`);
+    if(enCours.length > 3) reste.push(nb(enCours.length - 3, 'autre'));
+    etapes.push(['Mes activités', `<div class="r-grand r-anim">${n} sur ${acts.length}</div>
+      <div class="r-pts${acts.length > 12 ? ' petits' : ''} r-anim">${acts.map((_, i) => `<i${i < n ? ' data-r="on"' : ''}></i>`).join('')}</div>
+      <p class="r-anim">${!n ? `Tu travailles sur ${nb(acts.length, 'activité')}.` : n===acts.length ? 'Tu as terminé toutes tes activités. Bravo !'
+        : `Tu as terminé ${nb(n, 'activité')}. Il reste : ${et(reste)}.`}</p>`]);
+  }
+  /* Compétences : nom complet + nombre d'activités (même règle que Mon bilan) */
+  const nA = k => derniers.filter(d => d[k]==='a').length, nE = k => derniers.filter(d => d[k]==='ec').length;
+  const sait = COMPS.filter(nA), entr = COMPS.filter(k => !nA(k) && nE(k));
+  if(sait.length || entr.length) etapes.push(['Mes compétences', `<div class="r-cartes">${
+    sait.map(k => `<div class="r-anim" style="background:var(--p-mint)"><small>Je sais faire · ${nb(nA(k), 'activité')}</small>${NOMS[k]}</div>`).join('')}${
+    entr.map(k => `<div class="r-anim" style="background:var(--p-yellow)"><small>Je m’entraîne · ${nb(nE(k), 'activité')}</small>${NOMS[k]}</div>`).join('')}</div>`]);
+  if(nbCours){
+    const cours = pres.filter(x => x.s!=='s'), taux = nbPresent / nbCours;
+    etapes.push(['Mes présences', `<div class="r-grand r-anim">${nbPresent} cours sur ${nbCours}</div>
+      <div class="r-pts petits r-anim">${cours.slice(-20).map(x => `<i data-r="${x.s==='a' ? 'ab' : 'on'}"></i>`).join('')}</div>
+      <p class="r-anim">${taux===1 ? 'Tu étais là à chaque cours. Bravo !' : taux >= .9 ? 'Tu étais là presque tout le temps. Continue !'
+        : taux >= .75 ? 'Tu es souvent là. Continue !' : 'Chaque cours compte. On t’attend !'}${cours.length > 20 ? '<br><small>Les points : tes 20 derniers cours.</small>' : ''}</p>`]);
+  }
+  if(!etapes.length) return '';
+  const ecrans = [
+    `<div class="r-etape">${bonjour}<p class="r-anim">Voici ton suivi en ${nb(etapes.length, 'étape')}.</p>
+      <span class="r-glisse r-anim">Touche « Suivant » ou fais glisser ↑</span></div>`,
+    ...etapes.map(([titre, corps], i) => `<div class="r-etape"><span class="r-num r-anim">${i+1} · ${titre}</span>${corps}</div>`),
+    `<div class="r-etape"><h2 class="r-anim">C’est tout pour aujourd’hui<b>.</b></h2>
+      <button type="button" class="r-bouton clair r-anim" id="rPlus">Voir davantage</button></div>`];
+  return `<div class="r-recit" id="recit"><div class="r-barres" aria-hidden="true">${ecrans.map(() => '<i><b></b></i>').join('')}</div>
+    ${ecrans.join('')}<button type="button" class="r-bouton r-suivant" id="rSuivant">Suivant ↓</button></div>`;
+}
+/* Chaque écran s'anime quand il arrive (points remplis un par un) ; barres et bouton suivent l'écran visible */
+function brancherRecit(){
+  const r = $('recit');
+  document.documentElement.classList.toggle('r-snap', !!r && !toutOuvert);
+  if(!r) return;
+  const ecrans = [...r.querySelectorAll('.r-etape')], barres = [...r.querySelectorAll('.r-barres i')], suivant = $('rSuivant');
+  let ici = 0;
+  const montrer = s => {
+    if(!s.classList.contains('r-vu')){
+      s.classList.add('r-vu');
+      s.querySelectorAll('[data-r]').forEach((i, n) => setTimeout(() => i.classList.add(i.dataset.r), 500 + n*140));
+    }
+    ici = ecrans.indexOf(s);
+    barres.forEach((b, i) => b.classList.toggle('fait', i <= ici));
+    suivant.classList.toggle('cache', ici === ecrans.length - 1);
+  };
+  if('IntersectionObserver' in window){
+    const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) montrer(e.target); }), { threshold:.4 });
+    ecrans.forEach(s => obs.observe(s));
+  } else ecrans.forEach(montrer);
+  suivant.onclick = () => { const s = ecrans[ici+1]; if(s) s.scrollIntoView({ behavior:'smooth', block:'start' }); };
+  $('rPlus').onclick = () => {
+    toutOuvert = true; document.documentElement.classList.remove('r-snap');
+    $('tout').hidden = false; $('tout').scrollIntoView({ behavior:'smooth', block:'start' });
+  };
 }
 
 /* Vignette d'une activité : En cours ou Terminé. Un clic ouvre le détail. */
