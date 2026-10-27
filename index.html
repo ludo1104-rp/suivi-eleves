@@ -297,12 +297,12 @@ html.r-snap .top{scroll-snap-align:start}
     <input class="code" id="code" placeholder="CODE" aria-label="Mon code" autocapitalize="characters" spellcheck="false">
     <button class="grand" type="submit">Voir mon suivi</button>
     <div class="erreur" id="erreur" hidden>Ce code ne marche pas. Vérifie-le ou demande à Ludo.</div>
-    <p class="demo">Maquette · code de démonstration : <code>EMMA-4821</code></p>
+    <p class="demo seulement-mac">Maquette · code de démonstration : <code>EMMA-4821</code></p>
   </form>
 
   <div id="vueSuivi" hidden></div>
 
-  <p class="mentions">Version maquette · Application développée par Claude AI sous la supervision de Ludo<b style="font-weight:700;font-size:1.35em;line-height:0">.</b> (@rprof_1) ·
+  <p class="mentions"><span class="seulement-mac">Version maquette · </span>Application développée par Claude AI sous la supervision de Ludo<b style="font-weight:700;font-size:1.35em;line-height:0">.</b> (@rprof_1) ·
     <a href="https://rprof1.com" target="_blank" rel="noopener">rprof1.com</a> ·
     <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" target="_blank" rel="noopener">Licence CC BY-NC-SA 4.0</a></p>
 </main>
@@ -348,7 +348,7 @@ const COMP = { nt:['Pas demandé','gris'], ec:['Je m’entraîne','yellow'], a:[
 const VAL = {
   etat:{ nc:['Pas commencé','gris'], ec:['En cours','yellow'], t:['Fini','mint'] },
   oral:COMP, ecrit:COMP, compr:COMP, audit:COMP,
-  engag:{ n:['Je n’ai pas travaillé','rose'], e:['Je fais des efforts','blue'], ep:['Je travaille bien','mint'] },
+  engag:{ n:['Je n’ai pas travaillé','rose'], e:['Je travaille moyennement','blue'], ep:['Je travaille bien','mint'] },
   appre:{ p:['Je progresse','blue'], r:['Je réussis','lav'], m:['Je maîtrise','mint'] }
 };
 const NOMS = { etat:'Avancement', oral:'Prendre la parole', ecrit:'Écrire un texte', compr:'Lire et comprendre',
@@ -446,6 +446,9 @@ $('vueCode').addEventListener('submit', async e => {
   $('erreur').hidden = !!eleve;
   if(eleve){ code = c; afficher(); }
 });
+/* En ligne (élèves) : pas de ligne de démo ni de « maquette ». Sur le Mac (fichier local), elles restent.
+   Le code EMMA-4821 marche partout. */
+if(location.protocol !== 'file:') document.querySelectorAll('.seulement-mac').forEach(e => e.remove());
 /* Raccourci du QR code : eleve.html#c=ABC-DEFG remplit le code */
 try{
   const h = new URLSearchParams(location.hash.slice(1)), hc = (h.get('c') || '').toUpperCase();
