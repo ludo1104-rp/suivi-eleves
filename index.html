@@ -81,8 +81,19 @@ section h2{font-size:26px;margin-bottom:12px}
 .legende i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px}
 
 /* Graphique de progression */
-.graph{border:1px solid var(--line);border-radius:20px;padding:12px 8px 4px}
-.graph svg{display:block;width:100%;height:auto}
+/* Badges (05/11) : un badge par activité, 1 à 3 étoiles selon l'appréciation */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:14px;list-style:none;margin:0;padding:0}
+.badge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:14px 8px 12px;border:1px solid var(--line);border-radius:14px;background:var(--bg);animation:badge-pop .5s cubic-bezier(.3,1.6,.5,1) both}
+.badge .medaille{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;gap:1px;border:3px solid var(--b-gris);background:var(--p-gris)}
+.badge.n1 .medaille{background:var(--p-blue);border-color:var(--b-blue)}
+.badge.n2 .medaille{background:var(--p-lav);border-color:var(--b-lav)}
+.badge.n3 .medaille{background:var(--p-mint);border-color:var(--b-mint)}
+.badge .medaille svg{width:22px;height:22px}
+.badge .nom{font-weight:600;font-size:16px;line-height:1.2}
+.badge .niv{font-size:14px;color:var(--muted)}
+.badge.n0{opacity:.75}
+@keyframes badge-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){ .badge{animation:none} }
 
 /* Activités */
 .pastilles{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
@@ -206,7 +217,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--b-blue);outline-off
 }
 @media print{
   .top button{display:none}
-  .tuile,.message,.graph,.vig{break-inside:avoid}
+  .tuile,.message,.badge,.vig{break-inside:avoid}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 /* ===== Interface « Atelier » (25/10), comme prof.html ===== */
@@ -225,7 +236,7 @@ button:not(:disabled):active{opacity:.75}
 .bravo-carte{animation:apparait .3s ease-out}
 
 .tuile{background:var(--bg);border:1px solid var(--line);border-radius:14px}
-.message,.bilan,.graph{border-radius:14px}
+.message,.bilan{border-radius:14px}
 .vig{border-radius:14px}
 .vig.encours,.vig.fini{background:var(--bg);border-color:var(--line)}
 .vig.encours .etat{background:var(--p-yellow)}
@@ -590,9 +601,9 @@ function afficher(){
         `<button type="button" data-periode="${k}" aria-pressed="${k===periode}">${t}</button>`).join('')}</div>
       <div class="bilan" id="bilan">${bilan(acts, pres)}</div></section>` : ''}
 
-    ${acts.length ? `<section><h2>Ma progression</h2>
-      <p class="aide">Mon appréciation à chaque activité.</p>
-      <div class="graph">${graphique(acts)}</div></section>
+    ${acts.length ? `<section><h2>Mes badges</h2>
+      <p class="aide">Un badge par activité. Plus il y a d’étoiles, mieux c’est.</p>
+      ${badges(acts)}</section>
 
     <section><h2>Mes compétences</h2>
       ${barres}
@@ -861,21 +872,17 @@ function anneau(n, tot, coul){
       stroke-dasharray="${c*p} ${c}" transform="rotate(-90 29 29)"/></svg>`;
 }
 
-/* Graphique : appréciation (Je progresse → Je réussis → Je maîtrise) par activité */
-function graphique(acts){
-  const NIV = { p:1, r:2, m:3 }, W = 900, H = 260, g = 200, d = 80, h = 30, b = 60;
-  const x = i => g + (acts.length===1 ? (W-g-d)/2 : i*(W-g-d)/(acts.length-1));
-  const y = v => h + (3-v)*(H-h-b)/2;
-  const pts = acts.map((a, i) => [x(i), y(NIV[dernier(a).appre] || 1), dernier(a).appre]);
-  const coul = { p:'var(--b-blue)', r:'var(--b-lav)', m:'var(--b-mint)' };
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mon appréciation à chaque activité">
-    ${[['m',3,'Je maîtrise'],['r',2,'Je réussis'],['p',1,'Je progresse']].map(([k,v,t]) =>
-      `<line x1="${g-10}" x2="${W-d+10}" y1="${y(v)}" y2="${y(v)}" stroke="#ECECEC" stroke-width="2"/>
-       <text x="${g-24}" y="${y(v)+6}" text-anchor="end" font-size="18" fill="#0A0A0A">${t}</text>`).join('')}
-    <polyline points="${pts.map(p => p.slice(0,2).join(',')).join(' ')}" fill="none" stroke="#0A0A0A" stroke-width="3" stroke-linejoin="round"/>
-    ${pts.map(([px, py, k], i) => `<circle cx="${px}" cy="${py}" r="13" fill="${coul[k] || '#ddd'}" stroke="#0A0A0A" stroke-width="2.5"/>
-      <text x="${px}" y="${H-24}" text-anchor="middle" font-size="16" fill="#737373">${echap(acts[i].nom.length > 16 ? acts[i].nom.slice(0,15)+'…' : acts[i].nom)}</text>`).join('')}
-  </svg>`;
+/* Badges : un par activité, 1 étoile = Je progresse, 2 = Je réussis, 3 = Je maîtrise */
+function badges(acts){
+  const NIV = { p:1, r:2, m:3 }, TXT = ['Pas encore','Je progresse','Je réussis','Je maîtrise'];
+  const etoile = plein => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"
+    fill="${plein ? '#0A0A0A' : 'none'}" stroke="#0A0A0A" stroke-width="1.6" stroke-linejoin="round" opacity="${plein ? 1 : .35}"/></svg>`;
+  return `<ul class="badges">${acts.map((a, i) => {
+    const n = NIV[dernier(a).appre] || 0;
+    return `<li class="badge n${n}" style="animation-delay:${Math.min(i, 12)*.08}s" aria-label="${echap(a.nom)} : ${TXT[n]}">
+      <span class="medaille">${[1,2,3].map(k => etoile(k <= n)).join('')}</span>
+      <span class="nom">${echap(a.nom)}</span><span class="niv">${TXT[n]}</span></li>`;
+  }).join('')}</ul>`;
 }
 </script>
 </body>
