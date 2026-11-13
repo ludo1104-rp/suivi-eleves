@@ -16,6 +16,8 @@
   color-scheme:light;
   --bg:#FFFFFF; --surface:#F7F7F7; --ink:#0A0A0A; --muted:#737373; --line:#ECECEC; --line-strong:#DCDCDC;
   --p-blue:#DCE9FB; --p-lav:#E7E0FA; --p-mint:#DCF1E4; --p-yellow:#FAF0C8; --p-rose:#FADDE3; --p-gris:#F0F0F0; --p-peach:#FDE5D3;
+  /* Couleurs des classes (13/11) : mêmes que prof.html, jamais vert, rose, jaune ou bleu (réservés aux présences et aux états) */
+  --p-violet:#E6DDF8; --p-orange:#FDE1C8; --p-sarcelle:#D2EEEC; --p-taupe:#ECE3D8;
   --b-blue:#8FB4EE; --b-lav:#B4A4EC; --b-mint:#86CFA4; --b-yellow:#E3C766; --b-gris:#BDBDBD; --b-rose:#F4A3B4; --b-peach:#F2B48A;
   --mono:ui-monospace,"SF Mono",Menlo,monospace;
 }
@@ -49,7 +51,7 @@ main{max-width:980px;margin:0 auto;padding:20px 16px 48px}
 /* Tableau de bord */
 .bonjour{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .bonjour h1{font-size:40px}
-.cl{font-size:14px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--p-blue)}
+.cl{font-size:14px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--p-gris)}
 .maj{color:var(--muted);font-size:15px;margin:6px 0 0}
 .nouveau{display:inline-block;font-size:13px;padding:2px 10px;border-radius:999px;background:var(--p-yellow);border:1px solid var(--b-yellow);margin-left:6px}
 
@@ -297,22 +299,22 @@ html.r-snap .top{scroll-snap-align:start}
 .r-cartes div{border-radius:14px;padding:16px 18px;text-align:left;font-size:21px;font-weight:600}
 .r-cartes small{display:block;font-size:14px;font-weight:400;color:#555}
 /* Ligne du temps des activités (13/11) : chaque étape arrive, son rond se remplit, puis le trait descend vers la suivante */
-/* Horizontale (13/11, choix de Ludo : plus facile à lire pour les élèves), de gauche à droite ; défile seule si trop longue */
-.r-chemin{list-style:none;margin:0;padding:4px 0 10px;width:100%;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.r-chemin li:first-child{margin-left:auto} .r-chemin li:last-child{margin-right:auto}
-.r-chemin li{position:relative;flex:0 0 128px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 6px;
-  opacity:.25;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
-.r-chemin li > i{flex:none;position:relative;z-index:1;width:36px;height:36px;border-radius:50%;background:var(--bg);
+/* Horizontale, une ligne par sujet (13/11, choix de Ludo) : tout aligné à gauche, colonnes de même largeur
+   d'une ligne à l'autre ; rond, puis état, puis nom. Une ligne trop longue défile seule. */
+.r-sujets{width:fit-content;max-width:100%;display:grid;gap:22px;text-align:left}
+.r-sujet{min-width:0} .r-sujet h3{margin:0 0 10px;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.r-chemin{list-style:none;margin:0;padding:0 0 4px;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.r-chemin li{position:relative;flex:0 0 124px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding-right:12px;
+  opacity:.25;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
+.r-chemin li > i{flex:none;position:relative;z-index:1;width:32px;height:32px;border-radius:50%;background:var(--bg);
   border:3px solid var(--line-strong);transition:background-color .4s,border-color .4s,transform .4s cubic-bezier(.3,1.6,.5,1)}
-.r-chemin li:not(:last-child)::after{content:'';position:absolute;top:16.5px;left:calc(50% + 18px);width:calc(100% - 36px);height:3px;
+.r-chemin li:not(:last-child)::after{content:'';position:absolute;top:14.5px;left:32px;right:0;height:3px;
   background:var(--line-strong);transform-origin:left;transform:scaleX(0);transition:transform .35s ease .25s}
-.r-chemin li > span{font-size:17px;line-height:1.2}
-.r-chemin li > span b{font-weight:600;display:block}
-.r-chemin li > span small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.r-chemin li > span{font-size:16px;font-weight:600;line-height:1.2}
 .r-chemin li > em{font-style:normal;font-size:13px;padding:3px 10px;border-radius:999px;background:var(--p-gris)}
 .r-chemin li.t,.r-chemin li.ec,.r-chemin li.rat,.r-chemin li.nc{opacity:1;transform:none}
 .r-chemin li.t::after,.r-chemin li.ec::after,.r-chemin li.rat::after,.r-chemin li.nc::after{transform:scaleX(1)}
-.r-chemin li.t > i{background:var(--b-mint);border-color:var(--b-mint);transform:scale(1.12)}
+.r-chemin li.t > i{background:var(--b-mint);border-color:var(--b-mint)}
 .r-chemin li.t::after{background:var(--b-mint)}
 .r-chemin li.t > em{background:var(--p-mint)}
 .r-chemin li.ec > i{background:var(--p-yellow);border-color:var(--b-yellow)}
@@ -371,7 +373,7 @@ html.r-snap .top{scroll-snap-align:start}
    pendant le cours et l'élève voit ce qui a changé. */
 const DEMO = {
   'EMMA-4821': {
-    prenom:'Emma', classe:'P2SSFB',
+    prenom:'Emma', classe:'P2SSFB', couleur:'orange',
     /* Tiré du carnet de présences de Ludo (p présent, a absent, t arrivée tardive, s en stage).
        Les jours notés dans prof.html, sur cet appareil, remplacent ou complètent cette liste. */
     presences:[
@@ -416,6 +418,7 @@ const VAL = {
 const NOMS = { etat:'Avancement', oral:'Prendre la parole', ecrit:'Écrire un texte', compr:'Lire et comprendre',
   audit:'Écouter et comprendre', engag:'Engagement', appre:'Appréciation' };
 const COMPS = ['oral','ecrit','compr','audit'];
+const COUL_CLASSE = ['violet','orange','sarcelle','taupe'];   // = COULEURS de prof.html ; autre valeur = gris
 const COURT = { oral:'Parler', ecrit:'Écrire', compr:'Lire', audit:'Écouter' };
 /* Compétences transversales (13/11) : mêmes codes que TRANSV dans prof.html. Montrées seulement si notées. */
 const TRANSV = ['auton','colla','orga','perse','consi','aide','creat'];
@@ -449,6 +452,7 @@ function chercher(c){
     // le code démo EMMA-4821 est relié à Emma de la classe fictive P2SSFB
     if(e.code!==c && !(el && e.prenom===el.prenom && cl.nom===el.classe)) continue;
     el ||= { prenom:e.prenom, classe:cl.nom, presences:[], activites:activitesProf(S, cl.id, e.id) };
+    el.couleur = cl.couleur;
     // une présence par heure de cours : la clé « classe#3 » = 3e heure quand la classe a plusieurs heures ce jour-là
     const parJour = new Map(el.presences.map(x => [x.date, x]));
     for(const [date, cls] of Object.entries(S.presences || {})) for(const [k, pr] of Object.entries(cls))
@@ -489,7 +493,7 @@ function etapesEleve(S, k, x){
 /* Morceaux du parcours : les activités d'un sujet, ou le sujet lui-même s'il n'en a pas */
 const morceaux = a => a.etapes && a.etapes.length ? a.etapes.map(e => ({ nom:e.nom, sujet:a.nom, etat:e.etat, close:e.close }))
   : [{ nom:a.nom, etat:dernier(a).etat }];
-const ETAT_ET = { t:['Fini','mint'], ec:['En cours','yellow'], rat:['À finir','lav'], nc:['Pas commencé','gris'] };
+const ETAT_ET = { t:['Fini','mint'], ec:['En cours','yellow'], rat:['À finir','lav'], nc:['À venir','gris'] };
 const etatEt = e => e.etat==='t' ? 't' : e.close ? 'rat' : e.etat==='ec' ? 'ec' : 'nc';
 /* « Mon parcours » dans la carte d'un sujet : une étape par activité, reliées par un chemin */
 function parcours(a){
@@ -498,7 +502,7 @@ function parcours(a){
   return `<div class="parcours"><div class="sous">Mon parcours · ${a.etapes.filter(e => e.etat==='t').length} sur ${nb(a.etapes.length, 'activité')}</div><ol>${
     a.etapes.map(e => { const s = etatEt(e), cs = Object.keys(e.c || {}).filter(k => VAL[k] && VAL[k][e.c[k]]);
       return `<li class="pc-${s}"><i class="pc-pas" aria-hidden="true"></i><div class="pc-txt">
-        <div class="pc-haut"><b>${echap(e.nom)}</b><span class="pc-etat c-${ETAT_ET[s][1]}">${ETAT_ET[s][0]}</span></div>
+        <div class="pc-haut"><span class="pc-etat c-${ETAT_ET[s][1]}">${ETAT_ET[s][0]}</span><b>${echap(e.nom)}</b></div>
         ${cs.length ? `<div class="pc-comps">${cs.map(k => `<span class="pc-c c-${VAL[k][e.c[k]][1]}" title="${NOMS[k]} : ${VAL[k][e.c[k]][0]}">${nomC(k)}</span>`).join('')}</div>` : ''}
         ${e.rem ? `<p class="pc-rem">${echap(e.rem)}</p>` : ''}</div></li>`; }).join('')}</ol>
     ${a.etapes.some(e => Object.keys(e.c || {}).length) ? '<p class="pc-leg"><span class="pc-c c-mint">vert</span> je sais faire · <span class="pc-c c-yellow">jaune</span> je m’entraîne</p>' : ''}</div>`;
@@ -661,7 +665,7 @@ function afficher(){
       <span class="nb">${tot ? `${a} acquise${a>1?'s':''}` : 'pas encore'}</span></div>`;
   }).join('');
 
-  const bonjour = `<div class="bonjour"><h1 class="${f ? 'f-'+f : ''}">${f ? `<span class="deco">${FETES[f].svg}</span>` : ''}Bonjour${eleve.prenom ? ' '+echap(eleve.prenom) : ''}<b style="font-size:1.15em;line-height:0">.</b></h1><span class="cl">${echap(eleve.classe)}</span></div>
+  const bonjour = `<div class="bonjour"><h1 class="${f ? 'f-'+f : ''}">${f ? `<span class="deco">${FETES[f].svg}</span>` : ''}Bonjour${eleve.prenom ? ' '+echap(eleve.prenom) : ''}<b style="font-size:1.15em;line-height:0">.</b></h1><span class="cl"${COUL_CLASSE.includes(eleve.couleur) ? ` style="background:var(--p-${eleve.couleur})"` : ''}>${echap(eleve.classe)}</span></div>
     <p class="maj">${dateMaj ? `Mis à jour ${jour(dateMaj)}${dateMaj.length>10 ? ' à '+heure(dateMaj) : ''}` : 'Pas encore de suivi'}${dateMaj > vu && vu ? '<span class="nouveau">Nouveau</span>' : ''}</p>`;
   const etapes = recit({ acts, derniers, msg, pres, nbCours, nbPresent, enCours, finies, bonjour });
   $('vueSuivi').innerHTML = etapes + `<div id="tout"${etapes && !toutOuvert ? ' hidden' : ''}>
@@ -704,7 +708,7 @@ function afficher(){
       ${finies.length ? `<h3 class="groupe">Terminées <small>${finies.length}</small></h3><div class="vigs">${finies.map(a => carte(a, vu)).join('')}</div>` : ''}</section>` : ''}</div>`;
   if(apercu) $('vueSuivi').insertAdjacentHTML('afterbegin', '<p class="apercu">Aperçu prof : c’est ce que voit l’élève. Rien n’est marqué comme lu.</p>');
   else store('suivi-vu-'+code, dateMaj);
-  feter(acts);
+  // 13/11 (Ludo) : plus de fenêtre « Bravo » à la connexion, le récit qui défile suffit (feter() n'est plus appelée)
   brancherRecit();
   document.querySelectorAll('[data-periode]').forEach(b => b.onclick = () => {
     periode = b.dataset.periode;
@@ -725,15 +729,19 @@ function recit({ acts, derniers, msg, pres, nbCours, nbPresent, enCours, finies,
     /* Bienveillance (13/11) : un élève souvent absent ne voit jamais « 0 sur 9 » ni une liste de « Pas commencé ».
        Le grand chiffre dit ce qui est fait ; la ligne montre le commencé + UNE prochaine activité « À venir ». */
     const ms = acts.flatMap(morceaux), n = ms.filter(m => m.etat==='t').length, ec = ms.filter(m => m.etat==='ec').length;
-    const faits = ms.filter(m => m.etat==='t' || m.etat==='ec'), suite = ms.find(m => m.etat!=='t' && m.etat!=='ec');
-    const vus = faits.slice(-6).map(m => [m, etatEt(m)]).concat(suite ? [[suite, 'nc']] : []);
+    /* 13/11 (Ludo) : UNE ligne du temps par sujet (Togo, Foire…), colonnes alignées d'une ligne à l'autre.
+       Par ligne : commencé/fini + 1 « À venir ». Lignes : les 3 derniers sujets commencés, sinon + le prochain sujet. */
+    const lignes = acts.map(a => { const m = morceaux(a), f = m.filter(x => x.etat==='t' || x.etat==='ec'), suite = m.find(x => x.etat!=='t' && x.etat!=='ec');
+      return { a, vus:f.map(x => [x, etatEt(x)]).concat(suite ? [[suite, 'nc']] : []), commence:f.length > 0 }; });
+    const debut = lignes.filter(l => l.commence), rangs = debut.slice(-3);
+    if(rangs.length < 3){ const proch = lignes.find(l => !l.commence); if(proch) rangs.push(proch); }
     const grand = n && n*2 >= ms.length ? `${n} sur ${ms.length}` : n ? `${n} finie${n>1 ? 's' : ''}` : ec ? `${ec} en cours` : 'On y va !';
     etapes.push(['Mes activités', `<div class="r-grand r-anim">${grand}</div>
-      <ol class="r-chemin r-anim">${vus.map(([m, s]) =>
-        `<li data-r="${s}"><i aria-hidden="true"></i><span><b>${echap(m.nom)}</b>${m.sujet ? `<small>${echap(m.sujet)}</small>` : ''}</span><em>${s==='nc' ? 'À venir' : ETAT_ET[s][0]}</em></li>`).join('')}</ol>
+      <div class="r-sujets r-anim">${rangs.map(l => `<div class="r-sujet"><h3>${echap(l.a.nom)}</h3><ol class="r-chemin">${l.vus.map(([m, st]) =>
+        `<li data-r="${st}"><i aria-hidden="true"></i><em>${st==='nc' ? 'À venir' : ETAT_ET[st][0]}</em>${m.sujet ? `<span>${echap(m.nom)}</span>` : ''}</li>`).join('')}</ol></div>`).join('')}</div>
       <p class="r-anim">${n===ms.length ? 'Tu as terminé toutes tes activités. Bravo !'
         : n ? `Tu as terminé ${nb(n, 'activité')}${ec ? ` et ${ec > 1 ? 'tu en as commencé' : 'commencé'} ${ec > 1 ? ec : 'une autre'}` : ''}. Continue !`
-        : ec ? `Tu as commencé ${nb(ec, 'activité')}. Chaque pas compte !` : 'Ta prochaine activité t’attend. On la fait ensemble !'}${faits.length > 6 ? '<br><small>Tes 6 dernières activités.</small>' : ''}</p>`]);
+        : ec ? `Tu as commencé ${nb(ec, 'activité')}. Chaque pas compte !` : 'Ta prochaine activité t’attend. On la fait ensemble !'}${debut.length > 3 ? '<br><small>Tes 3 derniers sujets.</small>' : ''}</p>`]);
   }
   /* Compétences : nom complet + nombre d'activités (même règle que Mon bilan) */
   const nA = k => derniers.filter(d => d[k]==='a').length, nE = k => derniers.filter(d => d[k]==='ec').length;
