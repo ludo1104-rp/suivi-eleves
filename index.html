@@ -369,6 +369,10 @@ const NOMS = { etat:'Avancement', oral:'Prendre la parole', ecrit:'Écrire un te
   audit:'Écouter et comprendre', engag:'Engagement', appre:'Appréciation' };
 const COMPS = ['oral','ecrit','compr','audit'];
 const COURT = { oral:'Parler', ecrit:'Écrire', compr:'Lire', audit:'Écouter' };
+/* Compétences transversales (13/11) : mêmes codes que TRANSV dans prof.html. Montrées seulement si notées. */
+const TRANSV = ['auton','colla','orga','perse','consi','aide','creat'];
+const NOMS_TR = { auton:'Être autonome', colla:'Collaborer', orga:'M’organiser', perse:'Persévérer', consi:'Suivre les consignes', aide:'Demander de l’aide', creat:'Être créatif' };
+TRANSV.forEach(function(k){ VAL[k] = COMP; NOMS[k] = NOMS_TR[k]; });
 
 const $ = id => document.getElementById(id);
 const echap = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -407,7 +411,7 @@ function chercher(c){
   return el;
 }
 /* Activités notées par Ludo dans prof.html : visibles en direct, avec chaque mise à jour et son heure */
-const CRIT = ['etat','oral','ecrit','compr','audit','engag','appre'];
+const CRIT = ['etat','oral','ecrit','compr','audit','engag','appre'].concat(TRANSV);
 function activitesProf(S, cl, eid){
   return Object.entries(S.notes || {}).filter(([k, n]) => k.startsWith(cl+'|') && CRIT.some(c => n[eid]?.[c])).map(([k, n]) => {
     const j = S.journal.filter(x => x.classe===cl && cl+'|'+cleNom(x.activite)===k).sort((a, b) => a.date.localeCompare(b.date))[0];
@@ -713,6 +717,9 @@ function carte(a, vu){
       <div><div class="sous">Compétences</div><ul class="liste">
         ${COMPS.map(k => `<li${!d[k] || d[k]==='nt' ? ' class="pas-trav"' : ''}>${point(k, d[k])}<span>${COURT[k]}</span>${d[k] && d[k]!=='nt' ? `<em class="c-${VAL[k][d[k]][1]}">${VAL[k][d[k]][0]}</em>` : '<em>—</em>'}</li>`).join('')}
       </ul></div>
+      ${(function(l){ return l.length ? `<div><div class="sous">Compétences transversales</div><ul class="liste">
+        ${l.map(k => `<li>${point(k, d[k])}<span>${NOMS_TR[k]}</span><em class="c-${VAL[k][d[k]][1]}">${VAL[k][d[k]][0]}</em></li>`).join('')}
+      </ul></div>` : ''; })(TRANSV.filter(k => d[k] && d[k]!=='nt' && VAL[k][d[k]]))}
       <div><div class="sous">Moi en classe</div><ul class="liste">
         <li>${point('engag', d.engag)}<span>${VAL.engag[d.engag]?.[0] || '—'}${a.seances ? ` · tu as travaillé ${a.seances.ok} séance${a.seances.ok>1?'s':''} sur ${a.seances.total}` : ''}</span></li>
         <li>${point('appre', d.appre)}<span>${VAL.appre[d.appre]?.[0] || '—'}</span></li>
