@@ -101,7 +101,7 @@ section h2{font-size:26px;margin-bottom:12px}
 .pas small{color:#5a5a5a;margin-right:4px}
 .c-gris{background:var(--p-gris);border-color:var(--b-gris)} .c-yellow{background:var(--p-yellow);border-color:var(--b-yellow)}
 .c-mint{background:var(--p-mint);border-color:var(--b-mint)} .c-blue{background:var(--p-blue);border-color:var(--b-blue)}
-.c-lav{background:var(--p-lav);border-color:var(--b-lav)}
+.c-lav{background:var(--p-lav);border-color:var(--b-lav)} .c-rose{background:var(--p-rose);border-color:var(--b-rose)}
 .infos{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .sous{font-size:12px;font-weight:500;text-transform:uppercase;color:var(--muted);letter-spacing:.08em;margin-bottom:6px}
 .liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
@@ -165,6 +165,26 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--b-blue);outline-off
 .vig[open]{grid-column:1 / -1}
 .vig .detail{background:#fff;border-radius:0 0 19px 19px;padding:4px 16px 16px}
 .vig .infos{margin-top:0;border-top:0}
+/* « Mon parcours » dans la carte d'un sujet (13/11) : les activités reliées par un chemin, en haut du détail */
+.parcours{margin:10px 0 14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.parcours ol{list-style:none;margin:10px 0 0;padding:0 0 6px;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.parcours li{position:relative;flex:1 0 150px;max-width:260px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding-right:14px}
+.parcours li:not(:last-child)::after{content:'';position:absolute;top:10px;left:27px;right:4px;height:3px;border-radius:3px;background:var(--line-strong)}
+.parcours li.pc-t:not(:last-child)::after{background:var(--b-mint)}
+.pc-pas{flex:none;position:relative;z-index:1;width:23px;height:23px;border-radius:50%;background:#fff;border:3px solid var(--line-strong)}
+.pc-t .pc-pas{background:var(--b-mint);border-color:var(--b-mint)}
+.pc-ec .pc-pas{background:var(--p-yellow);border-color:var(--b-yellow)}
+.pc-rat .pc-pas{border-color:var(--b-lav)}
+.pc-txt{flex:1;min-width:0}
+.pc-haut{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.pc-haut b{font-size:18px;font-weight:600}
+.pc-etat{font-size:13px;padding:2px 10px;border-radius:999px;border:1px solid}
+.pc-comps{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.pc-c{font-size:14px;padding:3px 11px;border-radius:999px;border:1px solid}
+.pc-rem{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:var(--p-blue);font-size:15px;max-width:52ch}
+.pc-rem::before{content:'Ludo : ';font-weight:600}
+.pc-leg{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.pc-leg .pc-c{font-size:12px;padding:1px 8px}
 /* Présences */
 .pres-resume{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
 .pres-resume svg{flex:none;width:170px;height:170px}
@@ -276,6 +296,30 @@ html.r-snap .top{scroll-snap-align:start}
 .r-cartes{display:grid;gap:12px;width:min(420px,100%)}
 .r-cartes div{border-radius:14px;padding:16px 18px;text-align:left;font-size:21px;font-weight:600}
 .r-cartes small{display:block;font-size:14px;font-weight:400;color:#555}
+/* Ligne du temps des activités (13/11) : chaque étape arrive, son rond se remplit, puis le trait descend vers la suivante */
+/* Horizontale (13/11, choix de Ludo : plus facile à lire pour les élèves), de gauche à droite ; défile seule si trop longue */
+.r-chemin{list-style:none;margin:0;padding:4px 0 10px;width:100%;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.r-chemin li:first-child{margin-left:auto} .r-chemin li:last-child{margin-right:auto}
+.r-chemin li{position:relative;flex:0 0 128px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 6px;
+  opacity:.25;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.r-chemin li > i{flex:none;position:relative;z-index:1;width:36px;height:36px;border-radius:50%;background:var(--bg);
+  border:3px solid var(--line-strong);transition:background-color .4s,border-color .4s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+.r-chemin li:not(:last-child)::after{content:'';position:absolute;top:16.5px;left:calc(50% + 18px);width:calc(100% - 36px);height:3px;
+  background:var(--line-strong);transform-origin:left;transform:scaleX(0);transition:transform .35s ease .25s}
+.r-chemin li > span{font-size:17px;line-height:1.2}
+.r-chemin li > span b{font-weight:600;display:block}
+.r-chemin li > span small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.r-chemin li > em{font-style:normal;font-size:13px;padding:3px 10px;border-radius:999px;background:var(--p-gris)}
+.r-chemin li.t,.r-chemin li.ec,.r-chemin li.rat,.r-chemin li.nc{opacity:1;transform:none}
+.r-chemin li.t::after,.r-chemin li.ec::after,.r-chemin li.rat::after,.r-chemin li.nc::after{transform:scaleX(1)}
+.r-chemin li.t > i{background:var(--b-mint);border-color:var(--b-mint);transform:scale(1.12)}
+.r-chemin li.t::after{background:var(--b-mint)}
+.r-chemin li.t > em{background:var(--p-mint)}
+.r-chemin li.ec > i{background:var(--p-yellow);border-color:var(--b-yellow)}
+.r-chemin li.ec > em{background:var(--p-yellow)}
+.r-chemin li.rat > i{border-color:var(--b-rose)}
+.r-chemin li.rat > em{background:var(--p-rose)}
+@media (prefers-reduced-motion:reduce){ .r-chemin li,.r-chemin li > i,.r-chemin li::after{transition:none} .r-chemin li{opacity:1;transform:none} .r-chemin li::after{transform:none} }
 .r-anim{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
 .r-vu .r-anim{opacity:1;transform:none}
 .r-vu .r-anim:nth-child(2){transition-delay:.15s} .r-vu .r-anim:nth-child(3){transition-delay:.3s} .r-vu .r-anim:nth-child(4){transition-delay:.45s}
@@ -347,7 +391,11 @@ const DEMO = {
         { quand:'2026-10-14T09:35', etat:'ec', compr:'ec', ecrit:'ec', engag:'ep', appre:'r', remarque:'Tu as trouvé les infos importantes, bravo.' },
         { quand:'2026-10-14T10:20', etat:'t', compr:'a', ecrit:'ec', engag:'ep', appre:'m', remarque:'Super travail : tu as tout trouvé seule !' } ] },
       { nom:'Préparer le marché', date:'2026-10-16', envois:[
-        { quand:'2026-10-16T08:55', etat:'ec', oral:'ec', compr:'ec', engag:'ep', appre:'r', remarque:'Bon début, pense à relire ta liste.' } ] }
+        { quand:'2026-10-16T08:55', etat:'ec', oral:'ec', compr:'ec', engag:'ep', appre:'r', remarque:'Bon début, pense à relire ta liste.' } ],
+        etapes:[
+          { nom:'Faire la liste des achats', etat:'t', c:{ ecrit:'a', orga:'a' }, rem:'Bon début, pense à relire ta liste.' },
+          { nom:'Calculer le budget', etat:'ec', c:{ compr:'ec', auton:'ec' } },
+          { nom:'Jouer le marchand', c:{} } ] }
     ]
   }
 };
@@ -424,8 +472,36 @@ function activitesProf(S, cl, eid){
     const la = jours.filter(d => !['a','s'].includes(S.presences?.[d.slice(0,10)]?.[d.includes('#') ? cl+'#'+d.split('#')[1] : cl]?.[eid]?.s));
     const sans = la.filter(d => (x.sans || []).includes(d)).length;
     const seances = jours.length > 1 && sans ? { total:la.length, ok:la.length - sans } : null;
-    return { nom:j ? j.activite.trim() : k.split('|')[1], date, envois, seances };
+    const etapes = etapesEleve(S, k, x);
+    return { nom:j ? j.activite.trim() : k.split('|')[1], date, envois, seances, ...(etapes && { etapes }) };
   }).sort((a, b) => a.date.localeCompare(b.date));
+}
+/* Activités d'un sujet (13/11) : même logique que etapesEleve() dans prof.html, changer les deux ensemble */
+function etapesEleve(S, k, x){
+  const ets = (S.etapes || {})[k] || [];
+  if(!ets.length || (ets.length===1 && ets[0].tout)) return null;
+  return ets.map(function(et){ const y = (x.et || {})[et.id] || {}, c = {};
+    (et.comps || []).forEach(function(cp){ if(y[cp] && y[cp]!=='nt') c[cp] = y[cp]; });
+    const o = { nom:et.nom, c };
+    if(y.etat) o.etat = y.etat; if(et.close) o.close = 1; if(y.rem) o.rem = y.rem;
+    return o; });
+}
+/* Morceaux du parcours : les activités d'un sujet, ou le sujet lui-même s'il n'en a pas */
+const morceaux = a => a.etapes && a.etapes.length ? a.etapes.map(e => ({ nom:e.nom, sujet:a.nom, etat:e.etat, close:e.close }))
+  : [{ nom:a.nom, etat:dernier(a).etat }];
+const ETAT_ET = { t:['Fini','mint'], ec:['En cours','yellow'], rat:['À finir','lav'], nc:['Pas commencé','gris'] };
+const etatEt = e => e.etat==='t' ? 't' : e.close ? 'rat' : e.etat==='ec' ? 'ec' : 'nc';
+/* « Mon parcours » dans la carte d'un sujet : une étape par activité, reliées par un chemin */
+function parcours(a){
+  if(!a.etapes || !a.etapes.length) return '';
+  const nomC = k => COURT[k] || NOMS_TR[k];
+  return `<div class="parcours"><div class="sous">Mon parcours · ${a.etapes.filter(e => e.etat==='t').length} sur ${nb(a.etapes.length, 'activité')}</div><ol>${
+    a.etapes.map(e => { const s = etatEt(e), cs = Object.keys(e.c || {}).filter(k => VAL[k] && VAL[k][e.c[k]]);
+      return `<li class="pc-${s}"><i class="pc-pas" aria-hidden="true"></i><div class="pc-txt">
+        <div class="pc-haut"><b>${echap(e.nom)}</b><span class="pc-etat c-${ETAT_ET[s][1]}">${ETAT_ET[s][0]}</span></div>
+        ${cs.length ? `<div class="pc-comps">${cs.map(k => `<span class="pc-c c-${VAL[k][e.c[k]][1]}" title="${NOMS[k]} : ${VAL[k][e.c[k]][0]}">${nomC(k)}</span>`).join('')}</div>` : ''}
+        ${e.rem ? `<p class="pc-rem">${echap(e.rem)}</p>` : ''}</div></li>`; }).join('')}</ol>
+    ${a.etapes.some(e => Object.keys(e.c || {}).length) ? '<p class="pc-leg"><span class="pc-c c-mint">vert</span> je sais faire · <span class="pc-c c-yellow">jaune</span> je m’entraîne</p>' : ''}</div>`;
 }
 
 /* En ligne : Google renvoie le suivi d'UN élève, sous cadenas (piste A). Le code de l'élève l'ouvre ici,
@@ -644,12 +720,20 @@ function recit({ acts, derniers, msg, pres, nbCours, nbPresent, enCours, finies,
   const etapes = [];
   if(msg) etapes.push(['Le message de Ludo', `<div class="r-anim" style="width:min(560px,100%)">${bulle(msg.remarque, `${echap(msg.act)} · ${jour(msg.quand)}`, true)}</div>`]);
   if(acts.length){
-    const n = finies.length, reste = enCours.slice(0, 3).map(a => `<b>${echap(a.nom)}</b>`);
-    if(enCours.length > 3) reste.push(nb(enCours.length - 3, 'autre'));
-    etapes.push(['Mes activités', `<div class="r-grand r-anim">${n} sur ${acts.length}</div>
-      <div class="r-pts${acts.length > 12 ? ' petits' : ''} r-anim">${acts.map((_, i) => `<i${i < n ? ' data-r="on"' : ''}></i>`).join('')}</div>
-      <p class="r-anim">${!n ? `Tu travailles sur ${nb(acts.length, 'activité')}.` : n===acts.length ? 'Tu as terminé toutes tes activités. Bravo !'
-        : `Tu as terminé ${nb(n, 'activité')}. Il reste : ${et(reste)}.`}</p>`]);
+    /* 13/11 : on compte les activités (Projet Togo = 3 activités), pas les sujets, et on les montre en ligne du temps
+       qui se dessine étape par étape (les 6 dernières). */
+    /* Bienveillance (13/11) : un élève souvent absent ne voit jamais « 0 sur 9 » ni une liste de « Pas commencé ».
+       Le grand chiffre dit ce qui est fait ; la ligne montre le commencé + UNE prochaine activité « À venir ». */
+    const ms = acts.flatMap(morceaux), n = ms.filter(m => m.etat==='t').length, ec = ms.filter(m => m.etat==='ec').length;
+    const faits = ms.filter(m => m.etat==='t' || m.etat==='ec'), suite = ms.find(m => m.etat!=='t' && m.etat!=='ec');
+    const vus = faits.slice(-6).map(m => [m, etatEt(m)]).concat(suite ? [[suite, 'nc']] : []);
+    const grand = n && n*2 >= ms.length ? `${n} sur ${ms.length}` : n ? `${n} finie${n>1 ? 's' : ''}` : ec ? `${ec} en cours` : 'On y va !';
+    etapes.push(['Mes activités', `<div class="r-grand r-anim">${grand}</div>
+      <ol class="r-chemin r-anim">${vus.map(([m, s]) =>
+        `<li data-r="${s}"><i aria-hidden="true"></i><span><b>${echap(m.nom)}</b>${m.sujet ? `<small>${echap(m.sujet)}</small>` : ''}</span><em>${s==='nc' ? 'À venir' : ETAT_ET[s][0]}</em></li>`).join('')}</ol>
+      <p class="r-anim">${n===ms.length ? 'Tu as terminé toutes tes activités. Bravo !'
+        : n ? `Tu as terminé ${nb(n, 'activité')}${ec ? ` et ${ec > 1 ? 'tu en as commencé' : 'commencé'} ${ec > 1 ? ec : 'une autre'}` : ''}. Continue !`
+        : ec ? `Tu as commencé ${nb(ec, 'activité')}. Chaque pas compte !` : 'Ta prochaine activité t’attend. On la fait ensemble !'}${faits.length > 6 ? '<br><small>Tes 6 dernières activités.</small>' : ''}</p>`]);
   }
   /* Compétences : nom complet + nombre d'activités (même règle que Mon bilan) */
   const nA = k => derniers.filter(d => d[k]==='a').length, nE = k => derniers.filter(d => d[k]==='ec').length;
@@ -657,12 +741,14 @@ function recit({ acts, derniers, msg, pres, nbCours, nbPresent, enCours, finies,
   if(sait.length || entr.length) etapes.push(['Mes compétences', `<div class="r-cartes">${
     sait.map(k => `<div class="r-anim" style="background:var(--p-mint)"><small>Je sais faire · ${nb(nA(k), 'activité')}</small>${NOMS[k]}</div>`).join('')}${
     entr.map(k => `<div class="r-anim" style="background:var(--p-yellow)"><small>Je m’entraîne · ${nb(nE(k), 'activité')}</small>${NOMS[k]}</div>`).join('')}</div>`]);
-  if(nbCours){
-    const cours = pres.filter(x => x.s!=='s'), taux = nbPresent / nbCours;
-    etapes.push(['Mes présences', `<div class="r-grand r-anim">${nbPresent} cours sur ${nbCours}</div>
-      <div class="r-pts petits r-anim">${cours.slice(-20).map(x => `<i data-r="${x.s==='a' ? 'ab' : 'on'}"></i>`).join('')}</div>
+  /* Bienveillance (13/11) : sous 75 %, pas de « 3 cours sur 12 » ni de points roses ; on compte les venues.
+     Aucune venue : pas d'écran présences (Ludo en parle de vive voix). */
+  if(nbCours && nbPresent){
+    const cours = pres.filter(x => x.s!=='s'), taux = nbPresent / nbCours, peu = taux < .75;
+    etapes.push(['Mes présences', `<div class="r-grand r-anim">${peu ? `${nbPresent} cours` : `${nbPresent} cours sur ${nbCours}`}</div>
+      <div class="r-pts petits r-anim">${(peu ? cours.filter(x => x.s!=='a') : cours).slice(-20).map(x => `<i data-r="${x.s==='a' ? 'ab' : 'on'}"></i>`).join('')}</div>
       <p class="r-anim">${taux===1 ? 'Tu étais là à chaque cours. Bravo !' : taux >= .9 ? 'Tu étais là presque tout le temps. Continue !'
-        : taux >= .75 ? 'Tu es souvent là. Continue !' : 'Chaque cours compte. On t’attend !'}${cours.length > 20 ? '<br><small>Les points : tes 20 derniers cours.</small>' : ''}</p>`]);
+        : taux >= .75 ? 'Tu es souvent là. Continue !' : 'Chaque fois que tu viens, tu avances. On est content de te voir !'}${cours.length > 20 && !peu ? '<br><small>Les points : tes 20 derniers cours.</small>' : ''}</p>`]);
   }
   if(!etapes.length) return '';
   const ecrans = [
@@ -713,6 +799,7 @@ function carte(a, vu){
       <h3>${echap(a.nom)}</h3><span class="date">${jour(a.date)}</span>
       <span class="pts">${COMPS.map(k => point(k, d[k])).join('')}${d.remarque ? '<span class="msg">message de Ludo</span>' : ''}</span></summary>
     <div class="detail">
+    ${parcours(a)}
     <div class="infos">
       <div><div class="sous">Compétences</div><ul class="liste">
         ${COMPS.map(k => `<li${!d[k] || d[k]==='nt' ? ' class="pas-trav"' : ''}>${point(k, d[k])}<span>${COURT[k]}</span>${d[k] && d[k]!=='nt' ? `<em class="c-${VAL[k][d[k]][1]}">${VAL[k][d[k]][0]}</em>` : '<em>—</em>'}</li>`).join('')}
@@ -725,7 +812,7 @@ function carte(a, vu){
         <li>${point('appre', d.appre)}<span>${VAL.appre[d.appre]?.[0] || '—'}</span></li>
       </ul></div>
     </div>
-    ${(r => r ? bulle(r.remarque) : '')([...a.envois].reverse().find(e => e.remarque))}
+    ${(r => r && !(a.etapes || []).some(e => e.rem===r.remarque) ? bulle(r.remarque) : '')([...a.envois].reverse().find(e => e.remarque))}
     </div>
   </details>`;
 }
@@ -823,8 +910,8 @@ function bilan(tousActs, toutesPres){
     return `<b>${NOMS[k]}</b> (${n} activité${n>1?'s':''})`; }));
 
   if(acts.length){
-    const finies = d.filter(x => x.etat==='t').length, act = n => `${n} activité${n>1?'s':''}`;
-    lignes.push(['mint', finies ? `Tu as fini <b>${act(finies)}</b>.` : `Tu travailles sur <b>${act(acts.length)}</b>.`]);
+    const ms = acts.flatMap(morceaux), finies = ms.filter(m => m.etat==='t').length, act = n => `${n} activité${n>1?'s':''}`;
+    lignes.push(['mint', finies ? `Tu as fini <b>${act(finies)}</b>.` : `Tu travailles sur <b>${act(ms.length)}</b>.`]);
     const acquises = COMPS.filter(k => d.some(x => x[k]==='a'));
     const enCours = COMPS.filter(k => !acquises.includes(k) && d.some(x => x[k]==='ec'));
     if(acquises.length) lignes.push(['blue', `Objectif atteint : ${comp(acquises, 'a')}.`]);
@@ -838,7 +925,9 @@ function bilan(tousActs, toutesPres){
     const cours = pres.filter(x => x.s!=='s').length, ici = pres.filter(x => x.s==='p' || x.s==='t').length;
     // la période est écrite dans la phrase : « 6 sur 7 » seul faisait croire à une erreur (27/10)
     const quand = periode==='annee' ? 'Depuis septembre' : 'Ces 4 dernières semaines';
-    if(cours) lignes.push(['rose', `${quand}, tu étais là à <b>${ici} cours sur ${cours}</b>.`]);
+    // bienveillance (13/11) : sous 75 %, on dit les venues, pas le total manqué ; aucune venue = pas de ligne
+    if(cours && ici) lignes.push(ici / cours >= .75 ? ['rose', `${quand}, tu étais là à <b>${ici} cours sur ${cours}</b>.`]
+      : ['lav', `${quand}, tu es venu·e à <b>${ici} cours</b>. Chaque cours compte, on t’attend !`]);
     const o = pres.filter(x => x.i).length;
     if(o) lignes.push(['peach', `Tu as oublié ton iPad <b>${fois(o)}</b>.`]);
   }
