@@ -260,10 +260,21 @@ button:not(:disabled):active{opacity:.75}
 .tuile{background:var(--bg);border:1px solid var(--line);border-radius:14px}
 .message,.bilan{border-radius:14px}
 .vig{border-radius:14px}
-.vig.encours,.vig.fini{background:var(--bg);border-color:var(--line)}
-.vig.encours .etat{background:var(--p-yellow)}
-.vig.fini .etat{background:var(--p-mint)}
-.vig .detail{border-radius:0 0 13px 13px}
+/* Vignettes lisibles d'un coup d'œil (19/11) : fond pastel + bord gauche épais + grande icône d'état.
+   En cours = jaune, anneau à moitié plein. Fini = menthe, rond vert avec coche. */
+.vig.encours,.vig.fini{border-width:1px 1px 1px 8px;border-style:solid}
+.vig.encours{background:var(--p-yellow);border-color:var(--b-yellow)}
+.vig.fini{background:var(--p-mint);border-color:var(--b-mint)}
+.vig > summary{position:relative;padding-right:68px}
+.vig-ico{position:absolute;top:12px;right:12px;width:44px;height:44px}
+.vig-ico .ico{width:44px;height:44px;display:block}
+.vig .etat{font-weight:600;background:#fff;border:1px solid var(--b-yellow)}
+.vig.fini .etat{border-color:var(--b-mint)}
+.vig .detail{border-radius:0 0 13px 7px}
+.groupe{display:flex;align-items:center;gap:10px;font-size:20px;margin:22px 0 10px;padding-bottom:6px;border-bottom:3px solid var(--b-yellow)}
+.groupe.g-fini{border-bottom-color:var(--b-mint)}
+.groupe .ico{width:28px;height:28px;flex:none}
+.groupe small{font-size:15px}
 .aide{display:none}
 @media (prefers-reduced-motion:reduce){ .bravo-carte{animation:none} }
 
@@ -338,6 +349,11 @@ html.r-snap .top{scroll-snap-align:start}
 /* Point qui rebondit (comme rprof1.com) : le point et les lettres touchées bougent en JS */
 .pt-saute{position:relative;display:inline-block;transform-origin:50% 85%}
 .pt-l{display:inline-block;transform-origin:50% 100%}
+.vig .frise{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0}
+.vig .frise i{width:16px;height:16px;border-radius:50%;box-sizing:border-box;background:#fff;border:3px solid var(--line-strong)}
+.vig .frise .fr-t{background:var(--b-mint);border-color:var(--b-mint)}
+.vig .frise .fr-ec{background:var(--p-yellow);border-color:var(--b-yellow)}
+.vig .frise .fr-rat{border-color:var(--b-lav)}
 </style>
 </head>
 <body>
@@ -705,8 +721,8 @@ function afficher(){
 
     ${acts.length ? `<section><h2>Mes activités</h2>
       <p class="aide">Touche une activité pour voir le détail.</p>
-      ${enCours.length ? `<h3 class="groupe">En cours <small>${enCours.length}</small></h3><div class="vigs">${enCours.map(a => carte(a, vu)).join('')}</div>` : ''}
-      ${finies.length ? `<h3 class="groupe">Terminées <small>${finies.length}</small></h3><div class="vigs">${finies.map(a => carte(a, vu)).join('')}</div>` : ''}</section>` : ''}</div>`;
+      ${enCours.length ? `<h3 class="groupe g-ec">${ICO_EC}En cours <small>${enCours.length}</small></h3><div class="vigs">${enCours.map(a => carte(a, vu)).join('')}</div>` : ''}
+      ${finies.length ? `<h3 class="groupe g-fini">${ICO_FINI}Terminées <small>${finies.length}</small></h3><div class="vigs">${finies.map(a => carte(a, vu)).join('')}</div>` : ''}</section>` : ''}</div>`;
   if(apercu) $('vueSuivi').insertAdjacentHTML('afterbegin', '<p class="apercu">Aperçu prof : c’est ce que voit l’élève. Rien n’est marqué comme lu.</p>');
   else store('suivi-vu-'+code, dateMaj);
   // 13/11 (Ludo) : plus de fenêtre « Bravo » à la connexion, le récit qui défile suffit (feter() n'est plus appelée)
@@ -798,6 +814,10 @@ function brancherRecit(){
   };
 }
 
+/* Icônes d'état (19/11) : rond vert avec coche = fini ; anneau jaune à moitié plein = en cours. */
+const ICO_FINI = '<svg class="ico" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#3E9E68"/><path d="M11.5 20.5l6 6 11-12" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICO_EC = '<svg class="ico" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16.5" fill="#fff" stroke="#D9B640" stroke-width="5"/><path d="M20 9a11 11 0 0 1 0 22z" fill="#D9B640"/></svg>';
+
 /* Vignette d'une activité : En cours ou Terminé. Un clic ouvre le détail. */
 function carte(a, vu){
   const d = dernier(a), fini = d.etat==='t';
@@ -806,9 +826,10 @@ function carte(a, vu){
   /* Sujet en plusieurs activités : on nomme celle qui est finie, pour ne pas laisser croire que tout le sujet est terminé */
   const ets = a.etapes || [], finiesEt = ets.filter(e => e.etat==='t');
   const partiel = fini && finiesEt.length && finiesEt.length < ets.length;
-  const etiquette = partiel ? `Activité terminée : ${finiesEt[finiesEt.length-1].nom.trim()}` : fini && a.seule ? `Activité terminée : ${a.seule}` : fini ? 'Terminé' : 'En cours';
+  const multi = ets.length > 1;
+  const etiquette = multi ? `${finiesEt.length} sur ${ets.length} activités` : fini && a.seule ? `Activité terminée : ${a.seule}` : fini ? 'Terminé' : 'En cours';
   return `<details class="vig ${fini ? 'fini' : 'encours'}">
-    <summary><span class="etat">${echap(etiquette)}</span>${neuf ? '<span class="nouveau">Nouveau</span>' : ''}
+    <summary><span class="vig-ico">${fini ? ICO_FINI : ICO_EC}</span><span class="etat">${echap(etiquette)}</span>${multi ? `<span class="frise" aria-hidden="true">${ets.map(e => `<i class="fr-${etatEt(e)}"></i>`).join('')}</span>` : ''}${neuf ? '<span class="nouveau">Nouveau</span>' : ''}
       <h3>${echap(a.nom)}</h3><span class="date">${jour(a.date)}</span>
       <span class="pts">${COMPS.map(k => point(k, d[k])).join('')}${d.remarque ? '<span class="msg">message de Ludo</span>' : ''}</span></summary>
     <div class="detail">
