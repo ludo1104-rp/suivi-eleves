@@ -477,7 +477,8 @@ function activitesProf(S, cl, eid){
     const sans = la.filter(d => (x.sans || []).includes(d)).length;
     const seances = jours.length > 1 && sans ? { total:la.length, ok:la.length - sans } : null;
     const etapes = etapesEleve(S, k, x);
-    return { nom:j ? j.activite.trim() : k.split('|')[1], date, envois, seances, ...(etapes && { etapes }) };
+    const ets1 = (S.etapes || {})[k] || [], seule = ets1.length===1 && ets1[0].tout && cleNom(ets1[0].nom)!==cleNom(j ? j.activite : k.split('|')[1]) ? ets1[0].nom.trim() : '';   // même logique que suiviEleve() dans prof.html
+    return { nom:j ? j.activite.trim() : k.split('|')[1], date, envois, seances, ...(etapes && { etapes }), ...(seule && { seule }) };
   }).sort((a, b) => a.date.localeCompare(b.date));
 }
 /* Activités d'un sujet (13/11) : même logique que etapesEleve() dans prof.html, changer les deux ensemble */
@@ -802,8 +803,12 @@ function carte(a, vu){
   const d = dernier(a), fini = d.etat==='t';
   const neuf = vu && d.quand > vu;
   const point = (cle, code) => { const v = VAL[cle][code]; return v ? `<i class="pt c-${v[1]}"></i>` : '<i class="pt c-vide"></i>'; };
+  /* Sujet en plusieurs activités : on nomme celle qui est finie, pour ne pas laisser croire que tout le sujet est terminé */
+  const ets = a.etapes || [], finiesEt = ets.filter(e => e.etat==='t');
+  const partiel = fini && finiesEt.length && finiesEt.length < ets.length;
+  const etiquette = partiel ? `Activité terminée : ${finiesEt[finiesEt.length-1].nom.trim()}` : fini && a.seule ? `Activité terminée : ${a.seule}` : fini ? 'Terminé' : 'En cours';
   return `<details class="vig ${fini ? 'fini' : 'encours'}">
-    <summary><span class="etat">${fini ? 'Terminé' : 'En cours'}</span>${neuf ? '<span class="nouveau">Nouveau</span>' : ''}
+    <summary><span class="etat">${echap(etiquette)}</span>${neuf ? '<span class="nouveau">Nouveau</span>' : ''}
       <h3>${echap(a.nom)}</h3><span class="date">${jour(a.date)}</span>
       <span class="pts">${COMPS.map(k => point(k, d[k])).join('')}${d.remarque ? '<span class="msg">message de Ludo</span>' : ''}</span></summary>
     <div class="detail">
